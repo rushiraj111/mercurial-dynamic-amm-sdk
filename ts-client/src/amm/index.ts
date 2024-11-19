@@ -2015,7 +2015,7 @@ export default class AmmImpl implements AmmImplementation {
 
     const remainingAccounts = this.swapCurve.getRemainingAccounts();
 
-    const swapTx = await this.program.methods
+    const swapInstruction = await this.program.methods
       .swap(inAmountLamport, outAmountLamport)
       .accounts({
         aTokenVault: this.vaultA.vaultState.tokenVault,
@@ -2034,9 +2034,10 @@ export default class AmmImpl implements AmmImplementation {
         tokenProgram: TOKEN_PROGRAM_ID,
         vaultProgram: this.vaultProgram.programId,
       })
-      .remainingAccounts(remainingAccounts);
+      .remainingAccounts(remainingAccounts)
+      .instruction();
 
-    return swapTx.instruction;
+    return swapInstruction;
   }
 
   /**

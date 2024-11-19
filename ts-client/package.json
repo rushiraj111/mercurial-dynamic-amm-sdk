@@ -1,6 +1,6 @@
 {
-  "name": "@mercurial-finance/dynamic-amm-sdk",
-  "version": "1.1.15",
+  "name": "@rushiraj111/dynamic-amm-sdk",
+  "version": "1.1.151",
   "description": "Mercurial Vaults SDK is a typescript library that allows you to interact with Mercurial v2's AMM.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -54,7 +54,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mercurial-finance/mercurial-dynamic-amm-sdk.git"
+    "url": "git+https://github.com/rushiraj111/mercurial-dynamic-amm-sdk.git"
   },
   "keywords": [
     "mercurial",
@@ -64,10 +64,10 @@
     "sdk",
     "solana"
   ],
-  "author": "mercurial-finance",
+  "author": "rushiraj111",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mercurial-finance/mercurial-dynamic-amm-sdk/issues"
+    "url": "https://github.com/rushiraj111/mercurial-dynamic-amm-sdk/issues"
   },
-  "homepage": "https://github.com/mercurial-finance/mercurial-dynamic-amm-sdk#readme"
+  "homepage": "https://github.com/rushiraj111/mercurial-dynamic-amm-sdk#readme"
 }
