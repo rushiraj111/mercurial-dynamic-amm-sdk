@@ -1986,6 +1986,60 @@ export default class AmmImpl implements AmmImplementation {
   }
 
   /**
+   * `swapInstruction` is a function that takes in a `PublicKey` of the owner, a `PublicKey` of the input token
+   * mint, an `BN` of the input amount of lamports, and an `BN` of the output amount of lamports. It
+   * returns a `Promise<Instruction>` of the swap transaction
+   * @param {PublicKey} owner - The public key of the user who is swapping
+   * @param {PublicKey} inTokenMint - The mint of the token you're swapping from.
+   * @param {BN} inAmountLamport - The amount of the input token you want to swap.
+   * @param {BN} outAmountLamport - The minimum amount of the output token you want to receive.
+   * @param {PublicKey} userSourceToken - The public key of the user's source token account
+   * @param {PublicKey} userDestinationToken - The public key of the user's destination token account
+   * @returns A transaction object
+   */
+  public async swapInstruction(
+    owner: PublicKey,
+    inTokenMint: PublicKey,
+    inAmountLamport: BN,
+    outAmountLamport: BN,
+    userSourceToken: PublicKey,
+    userDestinationToken: PublicKey,
+  ): Promise<TransactionInstruction> {
+    const [sourceToken, destinationToken] = this.tokenAMint.address.equals(inTokenMint)
+      ? [this.poolState.tokenAMint, this.poolState.tokenBMint]
+      : [this.poolState.tokenBMint, this.poolState.tokenAMint];
+
+    const protocolTokenFee = this.tokenAMint.address.equals(inTokenMint)
+      ? this.poolState.protocolTokenAFee
+      : this.poolState.protocolTokenBFee;
+
+    const remainingAccounts = this.swapCurve.getRemainingAccounts();
+
+    const swapTx = await this.program.methods
+      .swap(inAmountLamport, outAmountLamport)
+      .accounts({
+        aTokenVault: this.vaultA.vaultState.tokenVault,
+        bTokenVault: this.vaultB.vaultState.tokenVault,
+        aVault: this.poolState.aVault,
+        bVault: this.poolState.bVault,
+        aVaultLp: this.poolState.aVaultLp,
+        bVaultLp: this.poolState.bVaultLp,
+        aVaultLpMint: this.vaultA.vaultState.lpMint,
+        bVaultLpMint: this.vaultB.vaultState.lpMint,
+        userSourceToken,
+        userDestinationToken,
+        user: owner,
+        protocolTokenFee,
+        pool: this.address,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        vaultProgram: this.vaultProgram.programId,
+      })
+      .remainingAccounts(remainingAccounts);
+
+    return swapTx.instruction;
+  }
+
+  /**
    * `swap` is a function that takes in a `PublicKey` of the owner, a `PublicKey` of the input token
    * mint, an `BN` of the input amount of lamports, and an `BN` of the output amount of lamports. It
    * returns a `Promise<Transaction>` of the swap transaction
@@ -2008,7 +2062,7 @@ export default class AmmImpl implements AmmImplementation {
 
     const swapTx = await this.swap(owner, inTokenMint, inAmountLamport, minOutAmountLamport);
     resultTxs.push(swapTx);
-    
+
     const stakeTx = await stakeForFee.stake(outAmountLamport, owner);
     resultTxs.push(stakeTx);
 
@@ -2506,7 +2560,7 @@ export default class AmmImpl implements AmmImplementation {
     createEscrowAtaIx && preInstructions.push(createEscrowAtaIx);
 
     const { userLockAmount, feeWrapperLockAmount } = calculateLockAmounts(amount, opt?.stakeLiquidity?.percent);
-  
+
     if (feeWrapperLockAmount.gt(new BN(0))) {
       const { stakeForFeeProgram } = createProgram(this.program.provider.connection);
 
@@ -2514,7 +2568,7 @@ export default class AmmImpl implements AmmImplementation {
       const vaultState = await getFeeVaultState(vaultKey, stakeForFeeProgram);
 
       if (!vaultState) {
-         throw new Error(`Fee vault not found for pool ${this.address.toBase58()}`);
+        throw new Error(`Fee vault not found for pool ${this.address.toBase58()}`);
       }
 
       const [lockEscrowFeeVaultPK] = deriveLockEscrowPda(this.address, vaultKey, this.program.programId);
@@ -2527,7 +2581,7 @@ export default class AmmImpl implements AmmImplementation {
       );
 
       createEscrowFeeVaultAtaIx && stakeForFeeInstructions.push(createEscrowFeeVaultAtaIx);
-      
+
       const lockTx = await this.program.methods
         .lock(feeWrapperLockAmount)
         .accounts({
